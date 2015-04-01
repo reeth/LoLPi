@@ -4,9 +4,9 @@ import time
 from riotwatcher import RiotWatcher,EUROPE_WEST
 import riotwatcher 
 
-APIKey = 'c190266b-93ad-4496-be0a-84d18878810a'
+APIKey = ''
 
-summoner = ['reeth 26399324', 'crankmind13 24605042', 'Fluegelgraph 40409815', 'BKolrabi 35064136', 'Crankm1nd13 43822576', 'Zy0L0rd 71939928']
+summoner = ['namehere  idhere']
 
 w = RiotWatcher(APIKey)
 
