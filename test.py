@@ -1,83 +1,92 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from riotwatcher import RiotWatcher
-import riotwatcher
-import json, time, sys, datetime, re
-from time import gmtime, strftime
-from datetime import datetime
-from pytz import timezone
-fmt = "%Y-%m-%d %H:%M:%S"
-# Current time in UTC
-now_utc = datetime.now(timezone('UTC'))
-# Convert to US/Pacific time zone
-now_pacific = now_utc.astimezone(timezone('US/Pacific'))
-# Convert to Europe/Berlin time zone
-zeit = now_pacific.astimezone(timezone('Europe/Berlin'))
-print zeit.strftime(fmt)
 
-from riotwatcher import EUROPE_WEST 
-w = RiotWatcher('') #API Key for RIOT
-print(w.can_make_request())
-euw = RiotWatcher('', default_region=EUROPE_WEST)
+import time
+from riotwatcher import RiotWatcher,EUROPE_WEST
+import riotwatcher 
 
-UIDS = ['26399324',  '24605042', '40409815', '35064136', '43822576']
+APIKey = ''
+
+summoner = ['namehere  idhere']
+
+w = RiotWatcher(APIKey)
+
+def wait():
+	while not w.can_make_request():
+		time.sleep(1)
 
 
-
-for UserId in UIDS:
-	try:
-		#Obtain User Details Via UIDS
-		currentgame = euw.get_current_game(summoner_id=UserId)
-		#Quick Hack Saves Learning Parsing Python Json LOL
-		data = re.compile('.*')
-		stats = data.findall(json.dumps(currentgame, indent=4))
-
-		#Grab The GameId From The Json Request.
-		gameId = stats[2].split()
-		gameId = gameId[1].strip()
-
-		#Grab The GameStartTime From The Json Request.
-		gameStartTime = stats[4].split()
-		gameStartTime = gameStartTime[1]
-
-		#Grab The PlatformId From The Json Request.
-		platformId = stats[6].split()
-		platformId = platformId[1]
-
-		#Grab The GameMode From The Json Request.
-		gameMode = stats[8].split()
-		gameMode = gameMode[1]
-
-		#Grab The MapId From The Json Request.
-		mapId = stats[10].split()
- 		mapId = mapId[1]
-
-		#Grab The GameType From The Json Request.
-		gameType = stats[12].split()
-		gameType = gameType[1]
-
-		#Grab The GameQueueConfigId From The Json Request.
-		gameQueueConfigId = stats[14].split()
-		gameQueueConfigId = gameQueueConfigId[1]
-
-		#Grab The Observers From The Json Request.
-		observers = stats[16].split()
-		observers = observers[1]
+def IsPlaying():
+	for summoners in summoner:
+	
+		try:
+	 
+			id = summoners.split()
+			print('Is %s In Game?') %(id[0])
+			currentgame = w.get_current_game(summoner_id=id[1])
+			gameId = currentgame['gameId']
+			
+			gameStartTime = currentgame['gameStartTime']
+			platformId = currentgame['platformId']
+			gameMode = currentgame['gameMode']
+			mapId = currentgame['mapId']
+			gameType = currentgame['gameType']
+			gameQueueConfigId = currentgame['gameQueueConfigId']
+			observers = currentgame['observers']
+			encrpytionKey = currentgame['observers']
+			
+			print "Current Game Stats For %s:\n\nGame Id: %s\nGame Start Time: %s\nPlatform Id: %s\n \
+			Game Mode: %s\nMap Id: %s\nGame Type: %s\nGame Queue Config Id: %s\nObservers: %s\nEncryption Key: %s" \
+			 %(id[0],gameId, gameStartTime, platformId, gameMode, mapId, gameType, gameQueueConfigId, observers, encrpytionKey)	
+			wait()
 		
-		encryptionKey = stats[18].split()
-		encryptionKey = encryptionKey[1]
+		except riotwatcher.LoLException:
+			print('User Is Not In Game')
 
-		#Print All The Stats If User Is Online 
-		print "Printing Stats\n"
-
-
-		print("GameId: %s\nGameStartTime: %s\nPlatformId: %s\nGameMode: %s\nMapId: %s \nGameType: %s\nGameQueueConfigId: %s\n Observers:%s\n EncryptionKey: %s\n" \
-		
-		%(gameId,gameStartTime,platformId,gameMode,mapId,gameType,gameQueueConfigId,observers,encryptionKey))
-		#^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Defines The Values to be  put in the print statement^^^^^^^^^^^^^^^^^# 
-
-		
+		except KeyboardInterrupt:
+			print('User Aborted')
+			break	
 
 
-	except riotwatcher.LoLException, Err:
-		print('User %s Possibly Offline %s' %(UserId, Err))
+
+def ProfileStats():
+	for summoners in summoner:	
+		try:		
+			name = summoners.split()
+			wait()
+			s = w.get_summoner(name=name[0], region=EUROPE_WEST)
+			profileIconId = s['profileIconId']
+			summonerLevel = s['summonerLevel']
+			revisionDate  = s['revisionDate']
+			revisionDate = str(revisionDate).strip("\r\n\t")
+			id = s['id']
+			name = s['name']
+
+			print "Profile Stats For %s\n\nProfileIconId: %s\nSummonerLevel: %s\nRevisionDate: \
+			%s\nAcount Id: %s\nAcount Name: %s \n\n" %(name,profileIconId,summonerLevel,revisionDate,id,name)
+			wait()
+
+		except riotwatcher.LoLException, Err:
+			print('503 Service unavailable')
+			print Err
+			pass
+
+		except KeyboardInterrupt:
+			print('User Aborted')
+			break
+
+
+
+if __name__ == '__main__':
+	
+	while 1:
+	
+		try:
+	
+			ProfileStats()
+			IsPlaying()
+			print('Waiting 600...')
+			time.sleep(600)
+	
+		except KeyboardInterrupt:
+			print('User Aborted')
+			break
